@@ -1,34 +1,28 @@
 import streamlit as st
-import asyncio
-import edge_tts
+from gtts import gTTS
 import os
 
-st.title("🎙️ SADAF - Free Voice App")
+# App ka Title
+st.title("🎙️ SADAF - Stable Voice App")
 
-# User se text lena
-user_text = st.text_area("Yahan text likhein:", "Assalam-o-Alaikum Saifullah bhai, kaise hain aap?")
+# Text Input
+user_text = st.text_area("Yahan text likhein:", "Assalam-o-Alaikum Saifullah bhai!")
 
-# Speed Control (Slider)
-speed = st.slider("Awaaz ki Raftar (Speed):", 0.5, 2.0, 1.0)
-
-# Speed ko Microsoft ke format mein badalna
-speed_str = f"{'+' if speed >= 1.0 else '-'}{int(abs(speed-1)*100)}%"
-
-async def generate_voice(text, rate):
-    voice = "ur-PK-AsmaNeural"
-    communicate = edge_tts.Communicate(text, voice, rate=rate)
-    await communicate.save("sadaf_voice.mp3")
+# Speed Option
+speed_choice = st.checkbox("Slow Awaaz (Pyari lagti hai)")
 
 if st.button("Awaaz Banayein"):
     if user_text:
         try:
             with st.spinner('Awaaz ban rahi hai...'):
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                loop.run_until_complete(generate_voice(user_text, speed_str))
+                # gTTS (Google Text-to-Speech)
+                tts = gTTS(text=user_text, lang='ur', slow=speed_choice)
+                tts.save("sadaf_voice.mp3")
                 
-                if os.path.exists("sadaf_voice.mp3"):
-                    st.audio("sadaf_voice.mp3")
-                    st.success("Ye lijiye, bilkul free!")
+                # Play Audio
+                audio_file = open("sadaf_voice.mp3", "rb")
+                audio_bytes = audio_file.read()
+                st.audio(audio_bytes, format="audio/mp3")
+                st.success("Mubarak ho! Ye wala error nahi dega.")
         except Exception as e:
-            st.error("Server busy hai, ek baar phir try karein.")
+            st.error(f"Oho! Choti si galti hui: {e}")
