@@ -1,21 +1,43 @@
 import streamlit as st
-from gtts import gTTS
+import requests
 import os
 
-st.title("Saifullah Bhai ka Voice App")
+# App ka naam aur style
+st.set_page_layout="centered"
+st.title("🎙️ SADAF - Voice Studio")
+st.subheader("Custom Voice & Instant Cloning")
 
-user_text = st.text_input("Yahan text likhein:", "Assalam-o-Alaikum, kaise hain aap?")
+# Sidebar mein settings
+st.sidebar.header("Settings")
+api_key = st.sidebar.text_input("ElevenLabs API Key dalien:", type="password")
+speed = st.sidebar.slider("Voice Speed (Kam/Zada):", 0.5, 2.0, 1.0)
+stability = st.sidebar.slider("Awaaz ki Safai (Stability):", 0.0, 1.0, 0.5)
 
-if st.button("Awaaz Banayein"):
-    if user_text:
-        try:
-            # Urdu language support
-            tts = gTTS(text=user_text, lang='ur', slow=False)
-            tts.save("voice.mp3")
-            
-            audio_file = open("voice.mp3", "rb")
-            audio_bytes = audio_file.read()
-            st.audio(audio_bytes, format="audio/mp3")
-            st.success("Ye lijiye awaaz taiyar hai!")
-        except Exception as e:
-            st.error(f"Masla aa gaya: {e}")
+# Main Options
+option = st.radio("Kya karna chahte hain?", ["Normal Awaaz (AI)", "Voice Cloning (Same to Same)"])
+
+if option == "Normal Awaaz (AI)":
+    user_text = st.text_area("Yahan text likhein:", "Assalam-o-Alaikum Saifullah bhai!")
+    if st.button("Awaaz Banayein"):
+        if not api_key:
+            st.warning("Pehle Sidebar mein API Key dalien.")
+        else:
+            # Code to generate AI voice with speed/stability
+            st.info("Awaaz generate ho rahi hai...")
+            # (ElevenLabs API call logic here)
+
+elif option == "Voice Cloning (Same to Same)":
+    st.write("### Voice Clone Karein")
+    uploaded_file = st.file_uploader("Jis ki awaaz clone karni hai uski 20 second ki recording upload karein (MP3/WAV)", type=['mp3', 'wav'])
+    clone_name = st.text_input("Awaaz ka naam rakhein (e.g. MyFriend):")
+    
+    if st.button("Clone Start Karein"):
+        if uploaded_file and api_key and clone_name:
+            st.success(f"{clone_name} ki awaaz clone ho rahi hai... Thora intezar karein.")
+            # Yahan voice cloning ka function chalega
+        else:
+            st.error("File, Name aur API Key lazmi hai!")
+
+# Footer
+st.markdown("---")
+st.caption("SADAF App - Created for Saifullah Bhai")
