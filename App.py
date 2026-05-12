@@ -1,28 +1,38 @@
 import streamlit as st
-from gtts import gTTS
+import asyncio
+import edge_tts
 import os
+import time
 
-# App ka Title
-st.title("🎙️ SADAF - Stable Voice App")
+st.title("🎙️ SADAF - Real Voice Studio")
 
-# Text Input
-user_text = st.text_area("Yahan text likhein:", "Assalam-o-Alaikum Saifullah bhai!")
+user_text = st.text_area("Yahan text likhein:", "Assalam-o-Alaikum Saifullah bhai, ab check karein!")
+speed = st.slider("Awaaz ki Raftar (Speed):", 0.5, 2.0, 1.0)
+speed_str = f"{'+' if speed >= 1.0 else '-'}{int(abs(speed-1)*100)}%"
 
-# Speed Option
-speed_choice = st.checkbox("Slow Awaaz (Pyari lagti hai)")
+async def generate_voice(text, rate):
+    voice = "ur-PK-AsmaNeural"
+    communicate = edge_tts.Communicate(text, voice, rate=rate)
+    await communicate.save("sadaf_real.mp3")
 
-if st.button("Awaaz Banayein"):
+if st.button("Asli Awaaz Banayein"):
     if user_text:
-        try:
-            with st.spinner('Awaaz ban rahi hai...'):
-                # gTTS (Google Text-to-Speech)
-                tts = gTTS(text=user_text, lang='ur', slow=speed_choice)
-                tts.save("sadaf_voice.mp3")
-                
-                # Play Audio
-                audio_file = open("sadaf_voice.mp3", "rb")
-                audio_bytes = audio_file.read()
-                st.audio(audio_bytes, format="audio/mp3")
-                st.success("Mubarak ho! Ye wala error nahi dega.")
-        except Exception as e:
-            st.error(f"Oho! Choti si galti hui: {e}")
+        success = False
+        attempts = 0
+        while not success and attempts < 3:
+            try:
+                with st.spinner(f'Koshish #{attempts+1}: Awaaz ban rahi hai...'):
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    loop.run_until_complete(generate_voice(user_text, speed_str))
+                    
+                    if os.path.exists("sadaf_real.mp3"):
+                        st.audio("sadaf_real.mp3")
+                        st.success("Mubarak ho! Ye real awaaz hai.")
+                        success = True
+            except Exception:
+                attempts += 1
+                time.sleep(2) # 2 second intezar
+        
+        if not success:
+            st.error("Microsoft ka server abhi bhi busy hai. 5 minute baad try karein.")
