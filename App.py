@@ -1,24 +1,34 @@
 import streamlit as st
-from gtts import gTTS
+import asyncio
+import edge_tts
 import os
 
-st.title("🎙️ SADAF - Zero Error Mode")
+st.set_page_config(page_title="SADAF AI", layout="centered")
+st.title("🎙️ SADAF - Real Urdu Voice")
 
-# Input area
-user_text = st.text_area("Yahan Urdu likhein:", "Saifullah bhai, ab ye busy nahi hoga, check karein!")
+# Input
+user_text = st.text_area("Yahan Urdu likhein:", "Saifullah bhai, ye sabse asan aur free tarika hai.")
+
+async def generate_voice(text):
+    # 'ur-PK-AsmaNeural' sabse natural Urdu awaaz hai
+    communicate = edge_tts.Communicate(text, "ur-PK-AsmaNeural")
+    await communicate.save("sadaf_final.mp3")
 
 if st.button("Awaaz Banayein"):
     if user_text:
-        try:
-            with st.spinner('Voice ban rahi hai...'):
-                # Google TTS - Ye hamesha stable rehta hai
-                tts = gTTS(text=user_text, lang='ur')
-                tts.save("sadaf_final.mp3")
+        with st.spinner('Awaaz ban rahi hai...'):
+            try:
+                # Running the async function
+                asyncio.run(generate_voice(user_text))
                 
                 if os.path.exists("sadaf_final.mp3"):
-                    audio_file = open("sadaf_final.mp3", "rb")
-                    st.audio(audio_file.read(), format="audio/mp3")
-                    st.success("Mubarak ho! Koi server busy nahi hai ab.")
-        except Exception as e:
-            st.error("Internet check karein, system okay hai.")
-            
+                    st.audio("sadaf_final.mp3")
+                    st.success("Ye lijiye Saifullah bhai!")
+                    # File delete kar dete hain taake agli baar fresh bane
+                    os.remove("sadaf_final.mp3")
+            except Exception as e:
+                st.error("Server ne phir nakhre kiye, ek baar phir button dabayein.")
+    else:
+        st.warning("Pehle kuch likh toh lein!")
+
+st.info("💡 Ye Microsoft ki 'Neural' voice hai, jo aam robot se behtar hai.")
